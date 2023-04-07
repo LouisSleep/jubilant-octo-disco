@@ -1,0 +1,86 @@
+<?php
+
+if($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Récupération des données du formulaire
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $domain = $_POST['domain'];
+try {
+    //code...
+
+
+    // Connexion à la base de données
+    $dsn = 'mysql:host=localhost:3306;dbname=nuage;charset=utf8mb4';
+    $dbuser = 'admin';
+    $dbpassword = 'admin1234';
+    $options = array(
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    );
+    $pdo = new PDO($dsn, $dbuser, $dbpassword, $options);
+}
+	catch (PDOException $e) {
+    die('erreur : ' . $e);
+}
+    // Vérification si l'utilisateur existe déjà
+    $sql = 'SELECT COUNT(*) FROM user_accounts WHERE username = :username';
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':username', $username);
+    $stmt->execute();
+    $result = $stmt->fetchColumn();
+
+    if($result > 0) {
+        // L'utilisateur existe déjà, affichage d'un message d'erreur
+        echo "L'utilisateur avec l'email $username existe déjà.";
+    } else {
+        // Insertion des données de l'utilisateur dans la base de données
+        $sql = 'INSERT INTO user_accounts (username, password, domain_name) VALUES (:username, :password, :domain_name)';
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':password', $password);
+        $stmt->bindParam(':domain_name', $domain);
+        $stmt->execute();
+	
+        // Affichage d'un message de confirmation
+        echo "L'utilisateur $username a été inscrit avec succès !";
+	$sudousername = shell_exec("sudo useradd -m -p " . $password . " " . $username);
+	var_dump($sudousername);
+"sudo useradd -m -p " . $password . " " . $username	if ($sudousername) {
+            echo "Utilisateur créé avec succès : " . escapeshellarg($username);
+       	} else {
+           echo "Erreur lors de la création de l'utilisateur.";
+       	}
+}
+}
+?>
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inscription</title>
+</head>
+<body>
+    <h2>Inscription</h2>
+    <form method="POST" action="">
+        <label>Nom d'utilisateur</label>
+        <input type="text" name="username" required><br><br>
+	<label>DNS</label>
+        <input type="text" name="domain" required><br><br>
+        <label>Mot de passe</label>
+        <input type="password" name="password" required><br><br>
+        <input type="submit" name="submit" value="S'inscrire">
+    </form>
+
+ <h2>Connexion</h2>
+    <form method="POST" action="">
+        <label>Nom d'utilisateur</label>
+        <input type="text" name="username" required><br><br>
+        <label>Mot de passe</label>
+        <input type="password" name="password" required><br><br>
+        <input type="submit" name="submit" value="S'inscrire">
+    </form>
+
+</body>
+</html>
